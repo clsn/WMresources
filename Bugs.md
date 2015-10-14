@@ -52,6 +52,10 @@ Most people seem to handle all the above complications more or less okay.  If so
 
 I'm not completely sure how all this works.  By this reasoning, it doesn't sound like it would work to have a `var_face` variable control which of several "pages" or "modes" your watch is in.  After all, if it's on face 0 now, how does it know to re-evaluate it when you tap the "change mode" button?  But somehow that doesn't seem to be an issue.  Variables like that apparently work okay without a `var_ms_` prefix.  It seems more to be an issue of variables that change not as a result of an action, but due to the passage of time, something that is changed or set in an `on_second()` or `on_millisecond()` function.  Usually you discover this problem only when something you expected to update doesn't, and then you realize you need to change the prefix.  It's something to be aware of.
 
+### But the compass pointer *still* isn't working!
+
+Oh, right.  This is an important one, that can drive you all-the-way nuts before you realize what's going on.  In order to conserve battery usage, WM doesn't bother checking high-battery and frequently-changing things like the accelerometer sensors, the gyroscope, the compass, etc. unless it figures you actually want it.  But it isn't always good about telling whether you want it.  If there are no *visible* elements (opacity at least 1) which have an attribute *directly* dependent on one of these sensors, the value won't update, *even if* it is used in `on_millisecond` or something like that.  So you have to put something that depends on whatever you're using directly in the watch.  It doesn't have to be big (make it size 1 or something, nobody will see it, especially if its opacity is also 1), but it has to be there.  A simple compass pointer or down-pointing pointer or something.
+
 ## Shaders
 
 There seem to be some issues with shaders in WM generally.  When they work, they can do great things, but sometimes stuff just goes weird; I think these are bugs in WM.

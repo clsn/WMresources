@@ -49,7 +49,31 @@ Just a shorthand I found that can save you some keystrokes if you use string fun
 	
 Note the syntax: the format string in quotes inside parens, then a *colon*, then “`format`”, and the parameters in parens. I don't actually know why the parens around the format string are necessary; I would not think they would be. I'm sure they aren't needed if the format is not a literal string (e.g. it's a variable).
 
-You can also use this trick if you make use of the `string.sub` function.  Instead of `string.sub(var_s, 2, 4)`, you can say `var_s:sub(2, 4)` (no need for extra parens here because it isn't a literal string.)
+You can also use this trick if you make use of the `string.sub` function. Instead of `string.sub(var_s, 2, 4)`, you can say `var_s:sub(2, 4)` (no need for extra parens here because it isn't a literal string.)
+
+# Interpolation
+
+This is the cause of perhaps the majority of posts asking for math help on the forum.  You need to move a pointer between two points on a line to display the hours or battery level.  Or maybe you need to rotate a hand on a dial for minutes, but it isn't a standard 360° dial, but rather only part.  Or anything like that.
+
+Basically, the problem is this: you have some "input" number coming in, and you need to convert it to some "output".  The input is going to be in some range, say between numbers *lo* and *hi*.  You want the output to be also in some range of numbers, say *LO* and *HI* (note that *HI* is not necessarily actually bigger than *LO*), so that when the input is *lo*, the output is *LO*, and when the input is *hi* the output is *HI*, and when it's halfway between them it's halfway between, and when it's a quarter of the way between then it's a quarter of the way between in the output too, and so on.  This is the magic formula you need for all cases like this.  If the number coming in is *x*, then in order to find the output, you compute:
+
+        LO + (x-lo)/(hi-lo) * (HI-LO)
+
+Read it again, it's important.
+
+So say you have a dial for minutes that's only an arc, say between 120° and 250°, so that at 0 minutes the rotation should be 120° and at 60 minutes it should be 250° (it never will be 60 minutes, only up to 59, but it's simpler to understand this way, and this will also come in handy if you wind up dealing with fractions of a minute, since then you can have numbers bigger than 59).  What should be the rotation for the hand?
+
+        120 + {dm}/60 * (250-120)
+
+Since *lo* is zero in this case, things are a little simpler.  And of course you could simplify (250-120) into 130, but you certainly don't have to, and maybe it's clearer to read if you don't.
+
+Now let's say you don't want it to jump between minutes, it should move more smoothly, taking fractional minutes into account.  You could compute the fractional minutes yourself, but it's easier just to use a variable WM already gives you: \{drm\}.  That's the rotation of the minute hand, adjusted for seconds.  Since it's the *rotation* of the minute hand and not the measure of minutes, its *hi* value is actually 360, not 60.  And we get:
+
+        120 + {drm}/360 * (250-120)
+
+This formula is what you need most of the time you're looking for a special rotation or something.
+
+(P.S. This might wind up doing something unexpected if you plug it in without thinking.  If your arc crosses the Y-axis, say between 290° and 30°, things will probably wind up in the wrong direction if you plug the numbers in blindly.  You could try using -70 instead of 290.  Another option would be to work it out as if it's between 0 and 100 and then subtract 70 (or add 290 modulo 360) afterward.)
 
 # Auto-flash
 
@@ -137,7 +161,9 @@ To reverse an image, you can do much the same thing: set its width to be the *ne
 
 This is something they teach you when programming: if you're using a number in a lot of places, set a variable to it and then use the variable.  That way, if you change the number, you don't have to track down all the places it was used.  This is handy in many places in WM.  I often declare a variable `var_r` to be the radius of my clock face, and other things depend on it.  To make the face smaller or larger, I can just change `var_r` in the script file and the whole face automagically remakes itself the right size.  Try it when you have something like the radius, or maybe a landmark position that affects many other things.  Variables are your friends.
 
+# Version
 
+An important thing to know: the version of lua used in WM (at the time of writing) is Lua 5.1.  You can find out by making a text element with the value `("%s"):format(_VERSION)`.
 
 
 
