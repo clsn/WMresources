@@ -164,8 +164,3 @@ This is something they teach you when programming: if you're using a number in a
 # Version
 
 An important thing to know: the version of lua used in WM (at the time of writing) is Lua 5.1.  You can find out by making a text element with the value `("%s"):format(_VERSION)`.
-
-
-
-
-

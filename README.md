@@ -17,3 +17,6 @@ Unless otherwise specified, content here is by Mark Shoulson.  Permission is exp
 * [Lua library for the Hebrew Calendar](HebCal.lua)
 * [Lua library for the Islamic Calendar](IslCal.lua)
 * [Some graphic elements that might be useful](Elements/)
+* [A font of geometric shapes](WatchGeometries.ttf), and also the
+  [source code for it](WatchGeoms.sfd) (for Fontforge)
+  * A tip I discovered in using it: to make a shape from the WatchGeometries font that's just (about) X by Y pixels (plus some line-width), set the font-size to *80*, and then set the `anim_scale_x` and `anim_scale_y` values to X and Y respectively.
