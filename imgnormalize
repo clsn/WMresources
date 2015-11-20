@@ -1,0 +1,81 @@
+#!/usr/bin/env perl
+
+# Read in the contents of the images/ subdir and the watch.xml file.
+# Replace instances of the same image file with only one name, which should
+# be the one that doesn't start with .img, if there is such.
+
+# DO NOT USE THIS FILE UNLESS YOU CAN RECOVER IF IT SCREWS UP!
+
+use Digest::MD5;
+use feature qw(say);
+use File::Copy;
+use File::Path qw(remove_tree);
+
+%forward=();
+%reverse=();
+
+
+remove_tree "images-PRENORM";
+rename "images", "images-PRENORM" or die "Couldn't rename images, stopped";
+mkdir "images" or die "Couldn't create images dir, stopped";
+chdir "images-PRENORM/" or die "No images folder found, stopped";
+
+for (glob("* .*")) {
+    next unless -f $_;
+    say "Reading: $_";
+    $ctx=Digest::MD5->new;
+    open MD, $_;
+    $ctx->addfile(*MD);
+    $md5sum=$ctx->hexdigest;
+    close MD;
+
+    $forward{$_}=$md5sum;
+    if (!$reverse{$md5sum} or /^[^.]/) {
+	$oldr=$reverse{$md5sum};
+	$reverse{$md5sum} = $_;
+	copy $_, "../images/";
+	if ($oldr) {
+	    say "Removing: $oldr";
+	    unlink("../images-PRENORM/".$oldr);
+	}
+    }
+    else {
+	say "Removing $_";
+    }
+}
+
+while (($k,$v) = each %reverse) {
+    say "$k: $v";
+}
+
+chdir ".." or die "Couldn't chdir back up, stopped";
+move("watch.xml", "watch.xml-PRENORM") or die "Couldn't move watch.xml, stopped";
+open IN, "watch.xml-PRENORM" or die "Couldn't read old watch.xml, stopped";
+open OUT, ">watch.xml" or die "Couldn't open watch.xml, stopped";
+
+$/="/>";
+
+while (<IN>) {
+    # unless (/type="image"/) {
+    # 	print OUT $_;
+    # 	next;
+    # }
+    # /path\s*=\s*"(.*?)"/;
+    # print OUT qq($`path="$reverse{$forward{$1}}"$');
+    if (/type="image(?:_cond)?"/) {
+	s@path="(.*?)"@path="$reverse{$forward{$1}}"@;
+    }
+    if (/type="image_gif"/) {
+	m@path="(.*?)"@;
+	my $line=$_;
+	my @imgs=split /`/, $1;
+	for $_ (@imgs) {
+	    $_=$reverse{$forward{$_}}
+	}
+	$line =~ s!$1!join "`", @imgs!e;
+	$_=$line
+    }
+    print OUT $_;
+}
+close(IN);
+close(OUT);

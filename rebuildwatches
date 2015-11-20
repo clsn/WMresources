@@ -1,0 +1,92 @@
+#!/usr/bin/env perl
+
+# Run from "BeautifulWatches" directory, if you have a backed-up copy of the tree.
+# It creates a "new_exports" subdir (which must not exist before you start) and drops
+# watches in subdirs of that.  There, you can use whatever zip program you like.
+
+use strict;
+use File::Spec;
+use File::Basename;
+use File::Copy;
+
+my ($file, $i);
+my $glob;
+
+mkdir File::Spec->catdir("new_exports") or die "Couldn't make new_exports folder, stopped";
+
+$glob=File::Spec->catfile('watches', 'u*.xml');
+for $file (glob($glob)) {
+    print "About to start on $file\n";
+    open IN, $file;
+    my ($watchbase, $wpath, $suffix)=fileparse($file, ".xml");
+    print("Starting on $watchbase\n");
+    my $line;
+    my $out;
+    my @images=();
+    my @fonts=();
+    my $prev;
+    my $outname;
+    my $scriptspec;
+    my $outfilename;
+    $/="/>";
+    $outname=File::Spec->catdir("new_exports", "$watchbase");
+    mkdir $outname;
+    $outfilename=File::Spec->catfile(File::Spec->splitdir($outname), "watch.xml");
+    open $out, ">$outfilename";
+    
+    while ($line=<IN>) {
+	if ($line =~ /^\s*<Watch\s+\S/) {
+	    $line=~/name="(.*?)"/;
+	    # No.  Can't trust this name yet.  Could have bad characters etc.
+	}
+	if ($line =~ /type="image"/) {
+	    $line =~ /path="(.*?)"/;
+	    push @images, $1;
+	}
+	if ($line =~ /type="image_gif"/) {
+	    my $paths;
+	    my @pathlist;
+	    $line =~ /path="(.*?)"/;
+	    $paths=$1;
+	    @pathlist=split /`/, $paths;
+	    push @images, @pathlist;
+	}
+	if ($line =~ /font="(.*?)"/) {
+	    push @fonts, $1;
+	}
+	print $out $line;
+    }
+    $out->close;
+    if (@images) {
+	my $imgdir=File::Spec->catdir(File::Spec->splitdir($outname), "images");
+	mkdir $imgdir unless -d $imgdir;
+	for (@images) {
+	    my $name=File::Spec->catfile("images", $_);
+	    copy($name, $imgdir);
+	}
+    }
+    if (@fonts) {
+	my $fontdir=File::Spec->catdir(File::Spec->splitdir($outname), "fonts");
+	mkdir $fontdir unless -d $fontdir;
+	for (@fonts) {
+	    my $g=File::Spec->catfile("fonts", $_.'.*');
+	    for my $f (glob($g)) {
+		copy($f, $fontdir);
+	    }
+	}
+    }
+    $scriptspec=File::Spec->catfile("scripts", $watchbase . ".txt");
+    if (-s $scriptspec) {
+	my $scriptdir=File::Spec->catdir(File::Spec->splitdir($outname),"scripts");
+	mkdir $scriptdir unless -d $scriptdir;
+	copy($scriptspec, File::Spec->catfile(File::Spec->splitdir($scriptdir), "script.txt"));
+    }
+    $prev=File::Spec->catfile("preview", $watchbase . ".jpg");
+    if (-s $prev) {
+	copy($prev, File::Spec->catfile(File::Spec->splitdir($outname), "preview.jpg"));
+    }
+    $prev=File::Spec->catfile("preview_dim", $watchbase . ".jpg");
+    if (-s $prev) {
+	copy($prev, File::Spec->catfile(File::Spec->splitdir($outname), "preview_dim.jpg"));
+    }
+}
