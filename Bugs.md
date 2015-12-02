@@ -64,6 +64,18 @@ Most people seem to handle all the above complications more or less okay.  If so
 
 I'm not completely sure how all this works.  By this reasoning, it doesn't sound like it would work to have a `var_face` variable control which of several "pages" or "modes" your watch is in.  After all, if it's on face 0 now, how does it know to re-evaluate it when you tap the "change mode" button?  But somehow that doesn't seem to be an issue.  Variables like that apparently work okay without a `var_ms_` prefix.  It seems more to be an issue of variables that change not as a result of an action, but due to the passage of time, something that is changed or set in an `on_second()` or `on_millisecond()` function.  Usually you discover this problem only when something you expected to update doesn't, and then you realize you need to change the prefix.  It's something to be aware of.
 
+### Trick for forcing updates
+
+Thanks to +Björn B for this trick: sometimes, particularly if you're trying
+to debug something that's in a variable that was never supposed to be
+exposed, you may want to force, somehow, a display to update a value that
+doesn't have the magic components in the name.  A brilliant trick for this
+is to do something like:
+
+    blah + {ds}*0
+
+See?  The variable is just whatever variable it is, the `+` sign makes WM evaluate it as a lua expression, and since the expression clearly depends on `{ds}`, it must have to re-evaluate it every second.  But of course, you're multiplying `{ds}` by zero, so it doesn't actually affect the results.  You would use `{dss}*0` to get millisecond updating, course. You might have to get creative to make this work for string values and stuff, but the idea is transferrable: work `{ds}` or `{dss}` into the expression and WM will evaluate it; multiply it by zero or otherwise nullify its actual contribution to make it easier to read.
+
 ## But the compass pointer *still* isn't working!
 
 Oh, right.  This is an important one, that can drive you all-the-way nuts before you realize what's going on.  In order to conserve battery usage, WM doesn't bother checking high-battery and frequently-changing things like the accelerometer sensors, the gyroscope, the compass, etc. unless it figures you actually want it.  But it isn't always good about telling whether you want it.  If there are no *visible* elements (opacity at least 1) which have an attribute *directly* dependent on one of these sensors, the value won't update, *even if* it is used in `on_millisecond` or something like that.  So you have to put something that depends on whatever you're using directly in the watch.  It doesn't have to be big (make it size 1 or something, nobody will see it, especially if its opacity is also 1), but it has to be there.  A simple compass pointer or down-pointing pointer or something.

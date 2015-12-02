@@ -10,6 +10,7 @@ use Digest::MD5;
 use feature qw(say);
 use File::Copy;
 use File::Path qw(remove_tree);
+use File::Spec::Functions;
 
 %forward=();
 %reverse=();
@@ -33,10 +34,10 @@ for (glob("* .*")) {
     if (!$reverse{$md5sum} or /^[^.]/) {
 	$oldr=$reverse{$md5sum};
 	$reverse{$md5sum} = $_;
-	copy $_, "../images/";
+	copy $_, catdir("..", "images");
 	if ($oldr) {
 	    say "Removing: $oldr";
-	    unlink("../images-PRENORM/".$oldr);
+	    unlink(catfile("..", "images-PRENORM", $oldr));
 	}
     }
     else {
@@ -56,12 +57,6 @@ open OUT, ">watch.xml" or die "Couldn't open watch.xml, stopped";
 $/="/>";
 
 while (<IN>) {
-    # unless (/type="image"/) {
-    # 	print OUT $_;
-    # 	next;
-    # }
-    # /path\s*=\s*"(.*?)"/;
-    # print OUT qq($`path="$reverse{$forward{$1}}"$');
     if (/type="image(?:_cond)?"/) {
 	s@path="(.*?)"@path="$reverse{$forward{$1}}"@;
     }
