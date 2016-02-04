@@ -6,7 +6,7 @@ function dtpp(dh23,dm,ds,dss)
     dm = dm or 0
     ds = ds or 0
     dss = dss or 0
-    return (dh23 + dm/60 + ds/3600 + ds/3600000)/24
+    return (dh23 + dm/60 + ds/3600 + dss/3600000)/24
 end
 
 -- dtp with higher precision and time-zone correction

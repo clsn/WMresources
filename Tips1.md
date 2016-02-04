@@ -35,11 +35,11 @@ You can modify that if you're toggling between 1 and 2 (`var_x=3-var_x`) etc. If
 
     var_x=not var_x
 	
-(and whatever you do, don't say things like "`if var_x==true`" or "`if var_x==false`". Just "`if var_x`" and "`if not var_x`". Testing a boolean for equality to true/false is redundant.)
+(and whatever you do, don't say things like “`if var_x==true`” or “`if var_x==false`”. Just “`if var_x`” and “`if not var_x`”. Testing a boolean for equality to true/false is redundant.)
 
 # math.max() and math.min()
 
-These are good to know about on general principles, and have particular applications in hand movements.  The `math.max()` function simply returns the largest of its arguments, however many there are, and `math.min()` returns the smallest.  This is useful when you want to “cap” a value so it doesn't exceed or fall below a certain value, even when the usual calculation for it would move it past.  So for example (a little contrived), if you wanted a smooth second hand that went around the dial in only 55 seconds and then stopped at 12:00 for 5 seconds until the next minute started, you might try setting the rotation to "`{drss}*60/55`", but then the hand wouldn't stop at 12:00, it would carry on for another 5 seconds and then snap back at the top of the minute.  But "`math.min(360, {drss}*60/55)`" would work: the value would be capped at 360.  Using `math.max(0, something)` is good for making sure the result never goes negative.
+These are good to know about on general principles, and have particular applications in hand movements.  The `math.max()` function simply returns the largest of its arguments, however many there are, and `math.min()` returns the smallest.  This is useful when you want to “cap” a value so it doesn't exceed or fall below a certain value, even when the usual calculation for it would move it past.  So for example (a little contrived), if you wanted a smooth second hand that went around the dial in only 55 seconds and then stopped at 12:00 for 5 seconds until the next minute started, you might try setting the rotation to “`{drss}*60/55`”, but then the hand wouldn't stop at 12:00, it would carry on for another 5 seconds and then snap back at the top of the minute.  But “`math.min(360, {drss}*60/55)`” would work: the value would be capped at 360.  Using `math.max(0, something)` is good for making sure the result never goes negative.
 
 # string.format Shorthand
 
@@ -55,7 +55,7 @@ You can also use this trick if you make use of the `string.sub` function. Instea
 
 This is the cause of perhaps the majority of posts asking for math help on the forum.  You need to move a pointer between two points on a line to display the hours or battery level.  Or maybe you need to rotate a hand on a dial for minutes, but it isn't a standard 360° dial, but rather only part.  Or anything like that.
 
-Basically, the problem is this: you have some "input" number coming in, and you need to convert it to some "output".  The input is going to be in some range, say between numbers *lo* and *hi*.  You want the output to be also in some range of numbers, say *LO* and *HI* (note that *HI* is not necessarily actually bigger than *LO*), so that when the input is *lo*, the output is *LO*, and when the input is *hi* the output is *HI*, and when it's halfway between them it's halfway between, and when it's a quarter of the way between then it's a quarter of the way between in the output too, and so on.  This is the magic formula you need for all cases like this.  If the number coming in is *x*, then in order to find the output, you compute:
+Basically, the problem is this: you have some “input” number coming in, and you need to convert it to some “output”.  The input is going to be in some range, say between numbers *lo* and *hi*.  You want the output to be also in some range of numbers, say *LO* and *HI* (note that *HI* is not necessarily actually bigger than *LO*), so that when the input is *lo*, the output is *LO*, and when the input is *hi* the output is *HI*, and when it's halfway between them it's halfway between, and when it's a quarter of the way between then it's a quarter of the way between in the output too, and so on.  This is the magic formula you need for all cases like this.  If the number coming in is *x*, then in order to find the output, you compute:
 
         LO + (x-lo)/(hi-lo) * (HI-LO)
 
@@ -113,6 +113,8 @@ which will seem to pull back slightly before going to the next second.  Or maybe
 
 These easing functions are a little strange to use directly; you have to remember their parameters: 1) where are we now (input)? 2) what's the starting output? 3) what's the change from starting to ending output? 4) what's the ending input?
 
+There's now a watch full of samples of other cool second-hand movements in this repository too, right [here](raw/master/Watches/second-examples.watch)
+
 # Lap Time
 
 A lot of watches have a stopwatch feature, and a lot of (real) ones have a “lap time” or “split time” feature, which is often missing in Watchmaker re-creations, and that's a shame.  The usual convention works as follows: you press START/STOP, and the stopwatch starts or stops.  If you hit LAP/RESET while the stopwatch is running, the *display* (or the postion of the hands) freezes, so you can record the time it took up to this point (this lap), but the timer itself *keeps running*.  When you hit LAP/RESET again, the display/hands is released and jumps forward to the current time.  You can hit START/STOP while the display/hands is frozen with LAP/RESET, in which case the timer stops, and when you release the display/hands it jumps forward to wherever it stopped, but isn't still running.  To actually reset the stopwatch, you hit LAP/RESET while the timer is actually stopped.  (All this sounds complicated, but it isn't a Watchmaker thing; this is how most real-life stopwatches work.)
@@ -160,6 +162,33 @@ To reverse an image, you can do much the same thing: set its width to be the *ne
 # Variables
 
 This is something they teach you when programming: if you're using a number in a lot of places, set a variable to it and then use the variable.  That way, if you change the number, you don't have to track down all the places it was used.  This is handy in many places in WM.  I often declare a variable `var_r` to be the radius of my clock face, and other things depend on it.  To make the face smaller or larger, I can just change `var_r` in the script file and the whole face automagically remakes itself the right size.  Try it when you have something like the radius, or maybe a landmark position that affects many other things.  Variables are your friends.
+
+# ISO Week Number
+
+Apparently, the `{dw}` tag in WM (week number) computes the week-number using an American style, which defines week #1 of the year as being the week which contains January 1, and weeks start on Sunday.  But in Europe, where I think they actually care about week-numbering more than we do here in America anyway, they use the ISO standard definition: week #1 of the year is the week which contains January 4, and the first day of the week is Monday.  This throws things off somewhat.  Here's a function that takes the year, the day-of-the-year (what the `{ddy}` tag gives you) and the day of the week (a number 0-6, where 0 is Sunday; the same value the `{ddw0}` tag gives you), and it returns the ISO week number.  Realize that this can mean you'll ask what week it is on January 2 and you might get back 52 or 53: you're going to have to work out on your own that this means week #52 or #53 of *last* year (or vice-versa if you get week #1 on December 31).
+
+	function var_week_iso(dyy, ddy, ddw0)
+	   local ylen
+	   -- ISO week starts Monday, but goes according to the Thursday
+		if ddw0 > 0 and ddw0 < 5 then
+		   ddy = ddy + (4-ddw0)
+		   if dyy%4 == 0 and not (dyy%100 == 0 and not dyy%400 == 0) then
+			   ylen = 366
+		   else
+			   ylen=365
+		   end
+		else
+		   ddy = ddy - ((ddw0+7-4)%7)
+		   dyy = dyy - 1
+		   if dyy%4 == 0 and not (dyy%100 == 0 and not dyy%400 == 0) then
+			   ylen = 366
+		   else
+			   ylen = 365
+		   end
+	   end
+	   ddy = (ddy-1)%ylen
+	   return math.floor(ddy/7)+1
+	end
 
 # Version
 
